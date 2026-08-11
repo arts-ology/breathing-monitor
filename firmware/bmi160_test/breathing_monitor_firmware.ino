@@ -1,19 +1,4 @@
-/*
-  Smart Breathing Monitor — Firmware Skeleton
-  Ashvin's Day 1/2 catch-up work
 
-  Structure:
-    - setup() runs once: init serial, init sensor
-    - loop() just checks the clock and fires tick() at a fixed rate
-    - tick() is where all periodic work happens (accel read now,
-      filter/BLE/alerts get added here on later days)
-
-  TODO (later days, don't build yet):
-    - Day 3: call filterTick() with complementary filter logic
-    - Day 3: peak detection / breath counting
-    - Day 4: bleTick() to broadcast live values
-    - Day 6: no-breath alert logic
-*/
 
 #include <SPI.h>
 #include "BMI160Gen.h"   // SparkFun BMI160 library — matches bmi160_test.ino
