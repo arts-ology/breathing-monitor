@@ -4,7 +4,6 @@ const int csPin = 5;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial);
 
   Serial.println("Initializing BMI160... if you can read this send hlep");
   BMI160.begin(BMI160GenClass::SPI_MODE, csPin);
@@ -18,7 +17,6 @@ void setup() {
   BMI160.setFullScaleGyroRange(BMI160_GYRO_RANGE_250);
   BMI160.setFullScaleAccelRange(BMI160_ACCEL_RANGE_2G);
 }
-
 void loop() {
   int gxRaw, gyRaw, gzRaw;
   int axRaw, ayRaw, azRaw;
