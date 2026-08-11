@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 duration_seconds = 30       # how long the fake recording is
 sample_rate = 100           # samples per second (matches your real sensor's ~100Hz rate)
 breath_cycle_seconds = 4    # one full inhale+exhale every 4 seconds
-noise_level = 0.05          # how much random jitter to mix in (small = subtle noise)
+noise_level = 0.01      # how much random jitter to mix in (small = subtle noise)
 
 num_samples = duration_seconds * sample_rate
 t = np.linspace(0, duration_seconds, num_samples)
 
 #sine wave for breathing signal
 breathing_freq_hz = 1 / breath_cycle_seconds
-clean_signal = np.sin(2 * np.pi * breathing_freq_hz * t)
-
+amplitude = 0.05  # small wobble, not a full ±1g swing
+clean_signal = amplitude * np.sin(2 * np.pi * breathing_freq_hz * t)
 #adding random variation \
 noise = np.random.normal(0, noise_level, num_samples)
 noisy_signal = clean_signal + noise
