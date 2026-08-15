@@ -2,14 +2,15 @@
 #include "BMI160Gen.h"   // SparkFun BMI160 library — matches bmi160_test.ino
 
 // ---- Pin config (match your Day 1 SPI wiring) ----
-#define BMI160_CS_PIN 5   // chip-select pin — set to whatever you wired
+#define BMI160_CS_PIN 4  // chip-select pin — set to whatever you wired
 
 // ---- Tick timing ----
 const unsigned long TICK_INTERVAL_MS = 20;   // 50 Hz. Change this one number to retune rate.
 unsigned long lastTickMs = 0;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200); 
+  //while (!Serial) { ; } // Wait for serial port to connect. Needed for native USB
 
   Serial.println("Step 1: Serial started");
 
