@@ -1,5 +1,3 @@
-
-
 #include <SPI.h>
 #include "BMI160Gen.h"   // SparkFun BMI160 library — matches bmi160_test.ino
 
@@ -12,15 +10,19 @@ unsigned long lastTickMs = 0;
 
 void setup() {
   Serial.begin(115200);
-  // NOTE: deliberately no "while (!Serial);" here — Day 2 quick fix.
-  // That line was what forced a manual reset every session; without it
-  // the board just starts running as soon as it has power.
+
+  Serial.println("Step 1: Serial started");
 
   SPI.begin();
+  Serial.println("Step 2: SPI.begin() done");
+
   pinMode(BMI160_CS_PIN, OUTPUT);
   digitalWrite(BMI160_CS_PIN, HIGH); // CS idle high
+  Serial.println("Step 3: CS pin set up");
 
+  Serial.println("Step 4: about to call BMI160.begin()...");
   BMI160.begin(BMI160GenClass::SPI_MODE, BMI160_CS_PIN);
+  Serial.println("Step 5: BMI160.begin() returned!");
 
   Serial.println("Firmware skeleton up. Starting tick loop...");
 }
@@ -32,22 +34,12 @@ void loop() {
     lastTickMs = now;
     tick();
   }
-
-  // Nothing else should block here — this is what keeps the loop free
-  // to add BLE/filter work later without them stepping on each other.
 }
 
-// Runs once per tick, at TICK_INTERVAL_MS rate.
 void tick() {
   readAndPrintIMU();
-
-  // filterTick();   // Day 3
-  // bleTick();      // Day 4
-  // alertTick();    // Day 6
 }
 
-// Reads raw accel + gyro values and prints them as CSV, same format
-// as bmi160_test.ino — just now driven by the tick loop instead of delay(10).
 void readAndPrintIMU() {
   int axRaw, ayRaw, azRaw;
   int gxRaw, gyRaw, gzRaw;
