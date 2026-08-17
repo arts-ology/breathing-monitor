@@ -21,4 +21,6 @@ plt.xlabel("Time (seconds)")
 plt.ylabel("Signal value")
 plt.title("Complementary Filter — Raw vs Filtered")
 plt.legend()
-plt.show()
+plt.show() 
+
+#new filtered value = 0.90 × (previous filtered value) + 0.10 × (newest raw value)

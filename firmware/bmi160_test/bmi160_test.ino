@@ -1,30 +1,68 @@
-#include "BMI160Gen.h"
+#include <SPI.h>
+#include "BMI160Gen.h"   // SparkFun BMI160 library — matches bmi160_test.ino
 
-const int csPin = 5;
+// ---- Pin config (match your Day 1 SPI wiring) ----
+#define BMI160_CS_PIN 4  // chip-select pin — set to whatever you wired
+
+// ---- Tick timing ----
+const unsigned long TICK_INTERVAL_MS = 20;   // 50 Hz. Change this one number to retune rate.
+unsigned long lastTickMs = 0; 
+
+float filteredValue = 0;
+bool filterInitialized = false;
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial);
+  Serial.begin(115200); 
+  //while (!Serial) { ; } // Wait for serial port to connect. Needed for native USB
 
-  Serial.println("Initializing BMI160... if you can read this send hlep");
-  BMI160.begin(BMI160GenClass::SPI_MODE, csPin);
+  Serial.println("Step 1: Serial started");
 
-  uint8_t devId = BMI160.getDeviceID();
-  Serial.print("Device ID: ");
-  Serial.println(devId, HEX);
+  SPI.begin();
+  Serial.println("Step 2: SPI.begin() done");
 
-  BMI160.setGyroRate(100);
-  BMI160.setAccelerometerRate(100);
-  BMI160.setFullScaleGyroRange(BMI160_GYRO_RANGE_250);
-  BMI160.setFullScaleAccelRange(BMI160_ACCEL_RANGE_2G);
+  pinMode(BMI160_CS_PIN, OUTPUT);
+  digitalWrite(BMI160_CS_PIN, HIGH); // CS idle high
+  Serial.println("Step 3: CS pin set up");
+
+  Serial.println("Step 4: about to call BMI160.begin()...");
+  BMI160.begin(BMI160GenClass::SPI_MODE, BMI160_CS_PIN);
+  Serial.println("Step 5: BMI160.begin() returned!");
+
+  Serial.println("Firmware skeleton up. Starting tick loop...");
 }
 
 void loop() {
-  int gxRaw, gyRaw, gzRaw;
-  int axRaw, ayRaw, azRaw;
+  unsigned long now = millis();
 
-  BMI160.readGyro(gxRaw, gyRaw, gzRaw);
+  if (now - lastTickMs >= TICK_INTERVAL_MS) {
+    lastTickMs = now;
+    tick();
+  }
+}
+
+void tick() {
+  readAndPrintIMU();
+}
+
+void filterTick(float rawValue) {
+  if (!filterInitialized) {
+    filteredValue = rawValue;
+    filterInitialized = true;
+    return;
+  }
+  float alpha = 0.90;
+  filteredValue = alpha * filteredValue + (1 - alpha) * rawValue;
+}
+
+
+void readAndPrintIMU() {
+  int axRaw, ayRaw, azRaw;
+  int gxRaw, gyRaw, gzRaw;
+
   BMI160.readAccelerometer(axRaw, ayRaw, azRaw);
+  BMI160.readGyro(gxRaw, gyRaw, gzRaw); 
+
+  filterTick((float)axRaw);
 
   Serial.print(axRaw);
   Serial.print(",");
@@ -36,7 +74,7 @@ void loop() {
   Serial.print(",");
   Serial.print(gyRaw);
   Serial.print(",");
-  Serial.println(gzRaw);
-
-  delay(10);
+  Serial.print(gzRaw);  
+  Serial.print(",");
+  Serial.print(filteredValue);
 }
