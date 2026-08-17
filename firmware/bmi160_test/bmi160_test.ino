@@ -29,16 +29,16 @@ class ServerCallbacks : public BLEServerCallbacks {
 };
 
 void setupBLE() {
-  BLEDevice::init("BreathingMonitor");
+  BLEDevice::init("BreathingMonitor"); //names the device 
   BLEServer *server = BLEDevice::createServer();
   server->setCallbacks(new ServerCallbacks());
-
+//creates the server ^^
   BLEService *service = server->createService(SERVICE_UUID);
 
   breathingCharacteristic = service->createCharacteristic(
     CHARACTERISTIC_UUID,
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
-  );
+  ); //creates teh folder and characteristic ^^
   breathingCharacteristic->addDescriptor(new BLE2902());
 
   service->start();
