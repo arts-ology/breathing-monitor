@@ -17,8 +17,8 @@ float lastFilteredValue = 0;
 bool rising = false;
 int breathCount = 0;
 
-#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
-#define CHARACTERISTIC_UUID "87654321-4321-4321-4321-cba987654321"
+#define SERVICE_UUID        "7A079255-3084-41FF-8CD6-41D6A1EED566"
+#define CHARACTERISTIC_UUID "BE6797CE-DF28-416A-980A-B756A08AA350"
 
 BLECharacteristic *breathingCharacteristic;
 bool deviceConnected = false;
