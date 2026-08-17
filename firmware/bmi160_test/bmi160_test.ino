@@ -1,11 +1,21 @@
-#include "SPI.h"
+#include <SPI.h>
+#include "BMI160Gen.h"
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-// ---- Pin config (match your Day 1 SPI wiring) ----
-#define BMI160_CS_PIN 4  // chip-select pin — set to whatever you wired
+#define BMI160_CS_PIN 4
+
+const unsigned long TICK_INTERVAL_MS = 20;
+unsigned long lastTickMs = 0;
+
+float filteredValue = 0;
+bool filterInitialized = false;
+
+float lastFilteredValue = 0;
+bool rising = false;
+int breathCount = 0;
 
 #define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
 #define CHARACTERISTIC_UUID "87654321-4321-4321-4321-cba987654321"
@@ -40,25 +50,17 @@ void setupBLE() {
   Serial.println("BLE advertising started as 'BreathingMonitor'");
 }
 
-void bleTick(float fakeBreathingRate) {
+void bleTick(float valueToSend) {
   if (deviceConnected) {
     char buf[10];
-    dtostrf(fakeBreathingRate, 4, 1, buf);
+    dtostrf(valueToSend, 4, 1, buf);
     breathingCharacteristic->setValue(buf);
     breathingCharacteristic->notify();
   }
 }
 
-// ---- Tick timing ----
-const unsigned long TICK_INTERVAL_MS = 20;   // 50 Hz. Change this one number to retune rate.
-unsigned long lastTickMs = 0; 
-
-float filteredValue = 0;
-bool filterInitialized = false;
-
 void setup() {
-  Serial.begin(115200); 
-  //while (!Serial) { ; } // Wait for serial port to connect. Needed for native USB
+  Serial.begin(115200);
 
   Serial.println("Step 1: Serial started");
 
@@ -66,7 +68,7 @@ void setup() {
   Serial.println("Step 2: SPI.begin() done");
 
   pinMode(BMI160_CS_PIN, OUTPUT);
-  digitalWrite(BMI160_CS_PIN, HIGH); // CS idle high
+  digitalWrite(BMI160_CS_PIN, HIGH);
   Serial.println("Step 3: CS pin set up");
 
   Serial.println("Step 4: about to call BMI160.begin()...");
@@ -89,9 +91,34 @@ void loop() {
 
 void tick() {
   readAndPrintIMU();
+}
+
+void readAndPrintIMU() {
+  int axRaw, ayRaw, azRaw;
+  int gxRaw, gyRaw, gzRaw;
+
+  BMI160.readAccelerometer(axRaw, ayRaw, azRaw);
+  BMI160.readGyro(gxRaw, gyRaw, gzRaw);
+
+  filterTick((float)axRaw);
+  peakTick(filteredValue);
 
   float fakeRate = 15.0 + sin(millis() / 2000.0) * 3.0;
   bleTick(fakeRate);
+
+  Serial.print(axRaw);
+  Serial.print(",");
+  Serial.print(ayRaw);
+  Serial.print(",");
+  Serial.print(azRaw);
+  Serial.print(",");
+  Serial.print(gxRaw);
+  Serial.print(",");
+  Serial.print(gyRaw);
+  Serial.print(",");
+  Serial.print(gzRaw);
+  Serial.print(",");
+  Serial.println(filteredValue);
 }
 
 void filterTick(float rawValue) {
@@ -104,28 +131,14 @@ void filterTick(float rawValue) {
   filteredValue = alpha * filteredValue + (1 - alpha) * rawValue;
 }
 
-
-void readAndPrintIMU() {
-  int axRaw, ayRaw, azRaw;
-  int gxRaw, gyRaw, gzRaw;
-
-  BMI160.readAccelerometer(axRaw, ayRaw, azRaw);
-  BMI160.readGyro(gxRaw, gyRaw, gzRaw); 
-
-  filterTick((float)axRaw);
-
-  Serial.print(axRaw);
-  Serial.print(",");
-  Serial.print(ayRaw);
-  Serial.print(",");
-  Serial.print(azRaw);
-  Serial.print(",");
-  Serial.print(gxRaw);
-  Serial.print(",");
-  Serial.print(gyRaw);
-  Serial.print(",");
-  Serial.print(gzRaw);  
-  Serial.print(",");
-  Serial.print(filteredValue);
-  Serial.println();
+void peakTick(float currentFiltered) {
+  if (currentFiltered > lastFilteredValue) {
+    rising = true;
+  } else if (currentFiltered < lastFilteredValue && rising) {
+    breathCount++;
+    rising = false;
+    Serial.print("Breath detected! Count: ");
+    Serial.println(breathCount);
+  }
+  lastFilteredValue = currentFiltered;
 }
