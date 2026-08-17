@@ -1,8 +1,53 @@
-#include <SPI.h>
-#include "BMI160Gen.h"   // SparkFun BMI160 library — matches bmi160_test.ino
+#include "SPI.h"
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
 
 // ---- Pin config (match your Day 1 SPI wiring) ----
 #define BMI160_CS_PIN 4  // chip-select pin — set to whatever you wired
+
+#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
+#define CHARACTERISTIC_UUID "87654321-4321-4321-4321-cba987654321"
+
+BLECharacteristic *breathingCharacteristic;
+bool deviceConnected = false;
+
+class ServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* server) { deviceConnected = true; }
+  void onDisconnect(BLEServer* server) { deviceConnected = false; }
+};
+
+void setupBLE() {
+  BLEDevice::init("BreathingMonitor");
+  BLEServer *server = BLEDevice::createServer();
+  server->setCallbacks(new ServerCallbacks());
+
+  BLEService *service = server->createService(SERVICE_UUID);
+
+  breathingCharacteristic = service->createCharacteristic(
+    CHARACTERISTIC_UUID,
+    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
+  );
+  breathingCharacteristic->addDescriptor(new BLE2902());
+
+  service->start();
+
+  BLEAdvertising *advertising = BLEDevice::getAdvertising();
+  advertising->addServiceUUID(SERVICE_UUID);
+  advertising->start();
+
+  Serial.println("BLE advertising started as 'BreathingMonitor'");
+}
+
+void bleTick(float fakeBreathingRate) {
+  if (deviceConnected) {
+    char buf[10];
+    dtostrf(fakeBreathingRate, 4, 1, buf);
+    breathingCharacteristic->setValue(buf);
+    breathingCharacteristic->notify();
+  }
+}
 
 // ---- Tick timing ----
 const unsigned long TICK_INTERVAL_MS = 20;   // 50 Hz. Change this one number to retune rate.
@@ -77,4 +122,7 @@ void readAndPrintIMU() {
   Serial.print(gzRaw);  
   Serial.print(",");
   Serial.print(filteredValue);
+  Serial.println();
 }
+float fakeRate = 15.0 + sin(millis() / 2000.0) * 3.0;
+   bleTick(fakeRate);

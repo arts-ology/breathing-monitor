@@ -3,7 +3,9 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/Users/ashvinkm/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
+                "/Users/ashvinkm/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/dio_qspi/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
