@@ -6,7 +6,10 @@
 
 // ---- Tick timing ----
 const unsigned long TICK_INTERVAL_MS = 20;   // 50 Hz. Change this one number to retune rate.
-unsigned long lastTickMs = 0;
+unsigned long lastTickMs = 0; 
+
+float filteredValue = 0;
+bool filterInitialized = false;
 
 void setup() {
   Serial.begin(115200); 
@@ -41,12 +44,25 @@ void tick() {
   readAndPrintIMU();
 }
 
+void filterTick(float rawValue) {
+  if (!filterInitialized) {
+    filteredValue = rawValue;
+    filterInitialized = true;
+    return;
+  }
+  float alpha = 0.90;
+  filteredValue = alpha * filteredValue + (1 - alpha) * rawValue;
+}
+
+
 void readAndPrintIMU() {
   int axRaw, ayRaw, azRaw;
   int gxRaw, gyRaw, gzRaw;
 
   BMI160.readAccelerometer(axRaw, ayRaw, azRaw);
-  BMI160.readGyro(gxRaw, gyRaw, gzRaw);
+  BMI160.readGyro(gxRaw, gyRaw, gzRaw); 
+
+  filterTick((float)axRaw);
 
   Serial.print(axRaw);
   Serial.print(",");
@@ -58,5 +74,7 @@ void readAndPrintIMU() {
   Serial.print(",");
   Serial.print(gyRaw);
   Serial.print(",");
-  Serial.println(gzRaw);
+  Serial.print(gzRaw);  
+  Serial.print(",");
+  Serial.print(filteredValue);
 }
