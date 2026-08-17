@@ -73,6 +73,8 @@ void setup() {
   BMI160.begin(BMI160GenClass::SPI_MODE, BMI160_CS_PIN);
   Serial.println("Step 5: BMI160.begin() returned!");
 
+  setupBLE();
+
   Serial.println("Firmware skeleton up. Starting tick loop...");
 }
 
@@ -87,6 +89,9 @@ void loop() {
 
 void tick() {
   readAndPrintIMU();
+
+  float fakeRate = 15.0 + sin(millis() / 2000.0) * 3.0;
+  bleTick(fakeRate);
 }
 
 void filterTick(float rawValue) {
@@ -124,5 +129,3 @@ void readAndPrintIMU() {
   Serial.print(filteredValue);
   Serial.println();
 }
-float fakeRate = 15.0 + sin(millis() / 2000.0) * 3.0;
-   bleTick(fakeRate);
