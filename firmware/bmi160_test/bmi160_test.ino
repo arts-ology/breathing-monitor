@@ -5,7 +5,7 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 
-#define BMI160_CS_PIN 4
+#define BMI160_CS_PIN 5
 
 const unsigned long TICK_INTERVAL_MS = 20;
 unsigned long lastTickMs = 0;
